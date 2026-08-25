@@ -4,7 +4,7 @@ import { DriverRepository } from '../repositories/driver.repository';
 export class DocumentService {
   static async getDocuments(driverId: string) {
     const driver = await DriverRepository.findById(driverId);
-    const vehicleId = driver?.assigned_vehicle_id || 'veh-138-01';
+    const vehicleId = driver?.assigned_vehicle_id || '8ff56887-33fa-411c-bcca-b3f95b5f089e';
 
     const [driverDocs, vehicleDocs] = await Promise.all([
       DocumentRepository.getDriverDocuments(driverId),
@@ -30,7 +30,7 @@ export class DocumentService {
   ) {
     if (category === 'VEHICLE') {
       const driver = await DriverRepository.findById(driverId);
-      const vehicleId = driver?.assigned_vehicle_id || 'veh-138-01';
+      const vehicleId = driver?.assigned_vehicle_id || '8ff56887-33fa-411c-bcca-b3f95b5f089e';
       return await DocumentRepository.createVehicleDocument(vehicleId, documentType, expiresAt, fileUrl);
     }
 

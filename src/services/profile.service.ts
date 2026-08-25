@@ -16,7 +16,7 @@ export class ProfileService {
       license_class: driver.license_class,
       license_expiry: driver.license_expiry,
       assigned_vehicle: {
-        vehicle_id: driver.assigned_vehicle_id || 'veh-138-01',
+        vehicle_id: driver.assigned_vehicle_id || '8ff56887-33fa-411c-bcca-b3f95b5f089e',
         registration_number: driver.registration_number || 'ND-4829',
         model: driver.model || 'Leyland Viking 2022',
         seating_capacity: driver.seating_capacity || 54,

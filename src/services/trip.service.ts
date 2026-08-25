@@ -42,10 +42,10 @@ export class TripService {
     let targetVehicleId = vehicleId;
     if (!targetVehicleId) {
       const driver = await DriverRepository.findById(driverId);
-      targetVehicleId = driver?.assigned_vehicle_id || 'veh-138-01';
+      targetVehicleId = driver?.assigned_vehicle_id || '8ff56887-33fa-411c-bcca-b3f95b5f089e';
     }
 
-    return await TripRepository.startTrip(driverId, targetVehicleId || 'veh-138-01', routeId);
+    return await TripRepository.startTrip(driverId, targetVehicleId || '8ff56887-33fa-411c-bcca-b3f95b5f089e', routeId);
   }
 
   static async completeHalt(tripId: string, haltId: string, sequenceNo: number, boardedPassengers: number = 0) {
