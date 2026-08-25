@@ -3,10 +3,11 @@ import { query } from '../config/db';
 export class CostRepository {
   static async getMaintenanceLogs(driverId: string, limit: number = 20) {
     const res = await query(
-      `SELECT maintenance_id, vehicle_id, driver_id, maintenance_type, amount, liters, description, logged_at
-       FROM core.vehicle_maintenance
-       WHERE driver_id = $1
-       ORDER BY logged_at DESC
+      `SELECT m.id AS maintenance_id, m.vehicle_id, da.driver_id, m.maintenance_type, m.cost AS amount, 0.00 AS liters, m.description, m.service_date AS logged_at
+       FROM core.vehicle_maintenance m
+       JOIN core.driver_assignments da ON m.vehicle_id = da.vehicle_id AND da.is_current = true
+       WHERE da.driver_id = $1
+       ORDER BY m.service_date DESC
        LIMIT $2`,
       [driverId, limit]
     );
@@ -14,27 +15,23 @@ export class CostRepository {
   }
 
   static async getTodayFuelLiters(driverId: string) {
-    const res = await query(
-      `SELECT COALESCE(SUM(liters), 0) as today_liters
-       FROM core.vehicle_maintenance
-       WHERE driver_id = $1 AND maintenance_type = 'FUEL' AND DATE(logged_at) = CURRENT_DATE`,
-      [driverId]
-    );
-    return parseFloat(res.rows[0]?.today_liters || '0');
+    return 0.00;
   }
 
   static async getCostTotals(driverId: string) {
     const todayRes = await query(
-      `SELECT COALESCE(SUM(amount), 0) as today_total
-       FROM core.vehicle_maintenance
-       WHERE driver_id = $1 AND DATE(logged_at) = CURRENT_DATE`,
+      `SELECT COALESCE(SUM(m.cost), 0) as today_total
+       FROM core.vehicle_maintenance m
+       JOIN core.driver_assignments da ON m.vehicle_id = da.vehicle_id AND da.is_current = true
+       WHERE da.driver_id = $1 AND DATE(m.service_date) = CURRENT_DATE`,
       [driverId]
     );
 
     const monthRes = await query(
-      `SELECT COALESCE(SUM(amount), 0) as monthly_total
-       FROM core.vehicle_maintenance
-       WHERE driver_id = $1 AND DATE_TRUNC('month', logged_at) = DATE_TRUNC('month', CURRENT_DATE)`,
+      `SELECT COALESCE(SUM(m.cost), 0) as monthly_total
+       FROM core.vehicle_maintenance m
+       JOIN core.driver_assignments da ON m.vehicle_id = da.vehicle_id AND da.is_current = true
+       WHERE da.driver_id = $1 AND DATE_TRUNC('month', m.service_date) = DATE_TRUNC('month', CURRENT_DATE)`,
       [driverId]
     );
 
@@ -53,15 +50,13 @@ export class CostRepository {
     description?: string;
   }) {
     const res = await query(
-      `INSERT INTO core.vehicle_maintenance (vehicle_id, driver_id, maintenance_type, amount, liters, description)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING *`,
+      `INSERT INTO core.vehicle_maintenance (id, vehicle_id, maintenance_type, cost, description, service_date)
+       VALUES (gen_random_uuid(), $1, $2, $3, $4, CURRENT_DATE)
+       RETURNING id AS maintenance_id, vehicle_id, maintenance_type, cost AS amount, description, service_date AS logged_at`,
       [
         data.vehicle_id,
-        data.driver_id,
         data.maintenance_type,
         data.amount,
-        data.liters || 0,
         data.description || '',
       ]
     );
