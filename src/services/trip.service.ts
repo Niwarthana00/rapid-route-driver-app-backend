@@ -4,16 +4,39 @@ import { CostRepository } from '../repositories/cost.repository';
 import { ROUTE_138, routeHaltsStore, RouteHalt } from '../constants/routes';
 
 export class TripService {
-  static async getActiveHalts(driverId: string) {
+  static async getActiveHalts(driverId: string, customRouteId?: string) {
     const activeTrip = await TripRepository.getActiveTripForDriver(driverId);
-    const routeId = activeTrip?.route_id || ROUTE_138.route_id;
+    const driverRouteInfo = !activeTrip ? await TripRepository.getDriverRouteInfo(driverId) : null;
+    
+    const routeId = customRouteId || activeTrip?.route_id || driverRouteInfo?.route_id || ROUTE_138.route_id;
+    const routeNumber = activeTrip?.route_number || driverRouteInfo?.route_number || ROUTE_138.route_number;
+    const routeName = activeTrip?.route_name || driverRouteInfo?.route_name || ROUTE_138.route_name;
+    const currentHaltIndex = activeTrip?.current_halt_index !== undefined ? activeTrip.current_halt_index : 0;
+    const tripId = activeTrip?.trip_id || 'trip-active-01';
 
-    const halts = routeHaltsStore.get(routeId) || ROUTE_138.halts;
+    let halts: any[] = [];
+    if (customRouteId) {
+      halts = await TripRepository.getHaltsByRouteId(customRouteId);
+    } else {
+      // 1. Try fetching via driver's active schedule / trips in DB
+      halts = await TripRepository.getActiveRouteHaltsForDriver(driverId);
+      // 2. If not found, try by routeId in DB
+      if (halts.length === 0 && routeId) {
+        halts = await TripRepository.getHaltsByRouteId(routeId);
+      }
+    }
+
+    // 3. Fallback to constant / stored halts if database table had no records
+    if (halts.length === 0) {
+      halts = routeHaltsStore.get(routeId) || ROUTE_138.halts;
+    }
 
     return {
-      trip_id: activeTrip?.trip_id || 'trip-active-01',
+      trip_id: tripId,
       route_id: routeId,
-      current_halt_index: activeTrip?.current_halt_index || 1,
+      route_number: routeNumber,
+      route_name: routeName,
+      current_halt_index: currentHaltIndex,
       halts,
     };
   }
@@ -64,12 +87,18 @@ export class TripService {
       durationMinutes = Math.max(1, Math.round(diffMs / (1000 * 60)));
     }
 
+    const totalPassengers = completedTrip.passenger_count || 42;
+    const distanceKm = 15.2;
+
     return {
       trip_id: completedTrip.trip_id,
       status: completedTrip.status,
       duration_minutes: durationMinutes,
+      total_duration_minutes: durationMinutes,
       completed_halts_count: completedTrip.completed_halts || 8,
-      total_passengers_carried: completedTrip.passenger_count || 42,
+      total_passengers_carried: totalPassengers,
+      total_passengers: totalPassengers,
+      distance_covered_km: distanceKm,
       start_time: completedTrip.start_time,
       end_time: completedTrip.end_time,
       costs_summary: {

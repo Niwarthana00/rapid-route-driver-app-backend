@@ -7,11 +7,12 @@ import { pool } from '../config/db';
 
 export class AuthService {
   static async login(identifier: string, pass: string) {
-    // 1. Fetch user account first
+    // 1. Fetch user account by email, phone, or linked driver's NIC/license
     const userRes = await pool.query(
-      `SELECT id, email, phone, password_hash, user_type, passenger_id, driver_id, is_active 
-       FROM core.user_accounts 
-       WHERE email = $1 OR phone = $1`,
+      `SELECT u.id, u.email, u.phone, u.password_hash, u.user_type, u.passenger_id, u.driver_id, u.is_active 
+       FROM core.user_accounts u
+       LEFT JOIN core.drivers d ON u.driver_id = d.id
+       WHERE u.email = $1 OR u.phone = $1 OR d.nic_number = $1 OR d.license_number = $1`,
       [identifier]
     );
     const user = userRes.rows[0];

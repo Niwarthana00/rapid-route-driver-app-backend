@@ -7,7 +7,7 @@ export class CostController {
     try {
       const driverId = req.driver!.driver_id;
       const data = await CostService.getCostLogs(driverId);
-      return successResponse(res, data, 'Cost logs retrieved successfully');
+      return successResponse(res, data, 'Costs retrieved successfully');
     } catch (error: any) {
       return errorResponse(res, error.message || 'Failed to fetch costs', 500, error);
     }
@@ -18,7 +18,7 @@ export class CostController {
       const driverId = req.driver!.driver_id;
       const { maintenance_type, amount, liters, description } = req.body;
       const result = await CostService.logCost(driverId, maintenance_type, amount, liters, description);
-      return successResponse(res, result, 'Expense logged successfully', 201);
+      return successResponse(res, result, 'Cost logged successfully', 201);
     } catch (error: any) {
       return errorResponse(res, error.message || 'Failed to log expense', 400, error);
     }
