@@ -7,7 +7,7 @@ export class DocumentController {
     try {
       const driverId = req.driver!.driver_id;
       const data = await DocumentService.getDocuments(driverId);
-      return successResponse(res, data, 'Documents retrieved successfully');
+      return successResponse(res, data, 'Documents fetched successfully');
     } catch (error: any) {
       return errorResponse(res, error.message || 'Failed to fetch documents', 500, error);
     }

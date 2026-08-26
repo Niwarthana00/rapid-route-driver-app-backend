@@ -6,8 +6,9 @@ export class TripController {
   static async getActiveHalts(req: Request, res: Response, next: NextFunction) {
     try {
       const driverId = req.driver!.driver_id;
-      const data = await TripService.getActiveHalts(driverId);
-      return successResponse(res, data, 'Active trip halts retrieved successfully');
+      const routeId = req.params.routeId || (req.query.route_id as string);
+      const data = await TripService.getActiveHalts(driverId, routeId);
+      return successResponse(res, data, 'Active route halts fetched successfully');
     } catch (error: any) {
       return errorResponse(res, error.message || 'Failed to fetch active halts', 500, error);
     }
@@ -39,7 +40,7 @@ export class TripController {
     try {
       const { trip_id, halt_id, sequence_no, boarded_passengers } = req.body;
       const log = await TripService.completeHalt(trip_id, halt_id, sequence_no, boarded_passengers);
-      return successResponse(res, log, 'Halt completed and logged successfully');
+      return successResponse(res, log, 'Halt marked as completed');
     } catch (error: any) {
       return errorResponse(res, error.message || 'Failed to log halt completion', 400, error);
     }
@@ -61,7 +62,7 @@ export class TripController {
       const driverId = req.driver!.driver_id;
       const { trip_id, latitude, longitude, speed } = req.body;
       const ping = await TripService.pingLocation(trip_id, driverId, latitude, longitude, speed);
-      return successResponse(res, ping, 'Location ping logged');
+      return successResponse(res, ping, 'Location updated');
     } catch (error: any) {
       return errorResponse(res, error.message || 'Failed to ping location', 400, error);
     }

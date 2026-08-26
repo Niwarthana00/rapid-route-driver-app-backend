@@ -14,6 +14,7 @@ const router = Router();
 router.use(authMiddleware);
 
 router.get('/active/halts', TripController.getActiveHalts);
+router.get('/routes/:routeId/halts', TripController.getActiveHalts);
 router.patch('/halts/:haltId', validateRequest(updateHaltSchema), TripController.updateHalt);
 router.post('/start', validateRequest(startTripSchema), TripController.startTrip);
 router.post('/halts/complete', validateRequest(completeHaltSchema), TripController.completeHalt);

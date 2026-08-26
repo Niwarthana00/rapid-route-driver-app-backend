@@ -8,7 +8,7 @@ export class BreakdownController {
       const driverId = req.driver!.driver_id;
       const { reason, location, notes, trip_id } = req.body;
       const result = await BreakdownService.reportBreakdown(driverId, reason, location, notes, trip_id);
-      return successResponse(res, result, 'Emergency breakdown alert broadcasted successfully', 201);
+      return successResponse(res, result, 'Emergency alert broadcasted to admin & passengers', 201);
     } catch (error: any) {
       return errorResponse(res, error.message || 'Failed to report breakdown', 400, error);
     }
